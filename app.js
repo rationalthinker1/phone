@@ -1,20 +1,15 @@
-//var express = require('express');
-//var app = express();
 var cheerio = require('cheerio');
 var request = require('request');
-//var mongodb = require('mongodb');
 var mongoose = require('mongoose');
 var db = mongoose.connection;
 mongoose.connect('mongodb://127.0.0.1:27017/directory');
 db.on('error', console.error);
 db.once('open', function () {
-	console.log('open');
 	var directorySchema = new mongoose.Schema({
 		name   : { type: String, required: true },
 		phone  : { type: String, unique: true, required: true, dropDups: true },
 		address: { type: String, required: true }
 	});
-
 	var Directory = mongoose.model('Directory', directorySchema);
 
 
@@ -571,8 +566,8 @@ db.once('open', function () {
 	/* 04:31pm - 295313 - 020 - 040 */
 	/* 05:07pm - 371235 - 040 - 060 */
 	/* 06:02pm - 481005 - 060 - 080 - 07:07pm */
-	/* 06:02pm - 481005 - 080 - 090 -> p */
-	/* 06:02pm - 481005 - 090 - 100 - NOT DONE */
+	/* 06:02pm - 481005 - 080 - 099  */
+	/* 06:02pm - 481005 - 099 - 100 - NOT DONE */
 	/* 06:08pm - 491820 - 100 - 120 - 07:16pm */
 	/* 06:08pm - 491820 - 120 - 140 */
 	/* 07:08pm - 598682 - 140 - 160 */
@@ -581,7 +576,8 @@ db.once('open', function () {
 	/* 08:41pm - 670549 - 180 - 200 */
 	/* 08:43pm - 670549 - 200 - 220 */
 	/* 08:43pm - 670549 - 220 - 240 */
-	/* 09:36pm - 670549 - 240 - 260 -> p */
+	/* 09:36pm - 670549 - 240 - 260 */
+	/* 09:36pm - 670549 - 260 - 263 */
 	for (var j = process.argv[ 2 ]; j < process.argv[ 3 ]; j++) {
 		var phones = range(initial[ j ] + '0000', 10000);
 		for (var i = 0; i < phones.length; i++) {
@@ -605,20 +601,10 @@ db.once('open', function () {
 							});
 						});
 					} else {
-						console.log('No information found for phone: ', phone);
+						console.log('No information found for phone:', phone);
 					}
 				});
 			})(phones[ i ]);
 		}
 	}
 });
-
-
-//var sleep = require('sleep');
-//var port = 3000;
-
-
-// START THE SERVER
-// =============================================================================
-//app.listen(port);
-//console.log('Magic happens on port ' + port);
