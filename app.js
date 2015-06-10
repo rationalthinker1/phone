@@ -16,9 +16,7 @@ db.on('error', console.error);
 db.once('open', function () {
     console.log('Opened the database');
 
-    var initial = process.argv[2];
-    var end = process.argv[3];
-    for (var j = initial; j < end; j++) {
+    for (var j = process.argv[2]; j < process.argv[3]; j++) {
         var i = 0;
         while (i < 10) {
             getPhone(phones[j] + functions.pad(i, 4), function () {
@@ -26,10 +24,10 @@ db.once('open', function () {
             });
         }
 
-        if (j == end) {
-            console.log('exit');
-            process.exit(0);
-        }
+        //if ((j+1) == process.argv[3]) {
+        //    console.log('exit');
+        //    process.exit(0);
+        //}
     }
 
     function getPhone(phone, cb) {
