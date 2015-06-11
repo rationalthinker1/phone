@@ -2,6 +2,7 @@
 
 var cheerio = require('cheerio');
 var request = require('request');
+var async = require('async');
 var mongoose = require('mongoose').connect('mongodb://127.0.0.1:27017/directory');
 var db = mongoose.connection;
 
@@ -16,13 +17,13 @@ db.on('error', console.error);
 db.once('open', function () {
     console.log('Opened the database');
 
-    for (var j = process.argv[2]; j < process.argv[3]; j++) {
+    var j = process.argv[2];
+    while(j < process.argv[3]) {
         var i = 0;
-        while (i < 10) {
-            getPhone(phones[j] + functions.pad(i, 4), function () {
-                i++;
-            });
+        while (i < 100) {
+            getPhone(phones[j] + functions.pad(i, 4), function () { i++; });
         }
+        j++;
 
         //if ((j+1) == process.argv[3]) {
         //    console.log('exit');
@@ -32,7 +33,7 @@ db.once('open', function () {
 
     function getPhone(phone, cb) {
         var base_url = 'http://www.canada411.ca/res/';
-        request(base_url + phone, function (err, response, body) {
+        request.get(base_url + phone, function (err, response, body) {
             if (!err && response.statusCode === 200) {
                 var $ = cheerio.load(body);
 
