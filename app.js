@@ -13,10 +13,13 @@ var db = mongoose.connection;
 
 var Directory = require('./models/directory');
 var functions = require('./functions');
-var p416 = require('./numbers/416');
-var p289 = require('./numbers/289');
-var p905 = require('./numbers/905');
-var phones = p905;
+//var p416 = require('./numbers/416');
+//var p289 = require('./numbers/289');
+//var p905 = require('./numbers/905');
+//var p647 = require('./numbers/647');
+//var p613 = require('./numbers/613');
+
+var phones = require('./numbers/' + process.argv[2]);
 
 if (cluster.isMaster) {
     // Fork workers.
@@ -44,7 +47,7 @@ if (cluster.isMaster) {
                 'Rate: ', rate, "\n"
             );
 
-            for (var j = process.argv[2]; j < process.argv[3]; j++) {
+            for (var j = process.argv[3]; j < process.argv[4]; j++) {
                 for (var i = start; i < end; i++) {
                     getPhone(phones[j] + functions.pad(i, 4), function() {});
                 }
