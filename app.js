@@ -4,6 +4,8 @@ var cheerio = require('cheerio');
 var request = require('request');
 var async = require('async');
 var mongoose = require('mongoose').connect('mongodb://127.0.0.1:27017/directory');
+// mongoimport --database directory --collections directories --file phones.json
+// mongoexport --database directory --collections directories --out phones.json
 var db = mongoose.connection;
 
 var Directory = require('./models/directory');
@@ -17,13 +19,11 @@ db.on('error', console.error);
 db.once('open', function () {
     console.log('Opened the database');
 
-    var j = process.argv[2];
-    while(j < process.argv[3]) {
+    for (var j = process.argv[2]; j < process.argv[3]; j++) {
         var i = 0;
-        while (i < 100) {
+        while (i < 10000) {
             getPhone(phones[j] + functions.pad(i, 4), function () { i++; });
         }
-        j++;
 
         //if ((j+1) == process.argv[3]) {
         //    console.log('exit');
