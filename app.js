@@ -7,8 +7,11 @@ var cluster = require('cluster');
 var numCPUs = require('os').cpus().length;
 
 var mongoose = require('mongoose').connect('mongodb://127.0.0.1:27017/directory');
-// mongoimport --database directory --collections directories --file phones.json
-// mongoexport --database directory --collections directories --out phones.json
+// mongoimport --db directory --collection directories --file phones.json
+// mongoexport --db directory --collection directories --out phones8.json
+//
+// To add a new column:
+// db.directories.find({ phone: "(905) 785-0005"}).forEach(function(list) { db.directories.update({ phone: list.phone }, { $set: { phone_raw: list.phone.replace(/[^0-9]/g, '') } }); });
 var db = mongoose.connection;
 
 var Directory = require('./models/directory');
@@ -66,6 +69,7 @@ if (cluster.isMaster) {
                                 name: data.find('.c411ListedName').first().text()
                                 , phone: data.find('.c411Phone').first().text()
                                 , address: data.find('.c411Address').first().text().trim()
+                                , phone_raw: phone
                             });
 
                             listing.save(function (err, element) {
