@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+//node --max_executable_size=2048 --max_old_space_size=6144 app.js 905 0 93
 
 var cheerio = require('cheerio');
 var request = require('request');
@@ -52,11 +53,11 @@ if (cluster.isMaster) {
 
             for (var j = process.argv[3]; j < process.argv[4]; j++) {
                 for (var i = start; i < end; i++) {
-                    getPhone(phones[j] + functions.pad(i, 4), function() {});
+                    getPhone(j, phones[j] + functions.pad(i, 4), function() {});
                 }
             }
 
-            function getPhone(phone, cb) {
+            function getPhone(j, phone, cb) {
                 var base_url = 'http://www.canada411.ca/res/';
                 request.get(base_url + phone, function (err, response, body) {
                     if (!err && response.statusCode === 200) {
@@ -79,7 +80,7 @@ if (cluster.isMaster) {
                         });
                     } else {
                         if (err) return console.error(err);
-                        console.log('No information found for phone:', phone);
+                        console.log('code: ' + process.argv[2] + '; index: ' + j + ';No information found for phone:', phone);
                     }
                 });
 
