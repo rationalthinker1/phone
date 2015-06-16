@@ -16,6 +16,7 @@ var request  = require('request');
 var async    = require('async');
 var argv     = require('minimist')(process.argv.slice(2));
 var cluster  = require('cluster');
+var sleep    = require('sleep');
 var mongoose = require('mongoose').connect('mongodb://127.0.0.1:27017/directory');
 var db       = mongoose.connection;
 
@@ -27,6 +28,8 @@ var numCPUs   = require('os').cpus().length;
 
 /* How many checks will be do? 10^4 */
 var permutation = 10000;
+
+var current_phone_number;
 
 if (cluster.isMaster) {
     /* Forking to creating workers */
@@ -62,48 +65,53 @@ if (cluster.isMaster) {
             if (argv.to !== undefined && argv.from !== undefined) {
                 for (var j = argv.to; j < argv.from; j++) {
                     for (var i = start; i < end; i++) {
-                        getPhone(j, phones[j] + functions.pad(i, 4));
+                        current_phone_number = phones[j];
+                        getPhone(j, current_phone_number + functions.pad(i, 4));
                     }
                 }
             } else {
                 for (var i = start; i < end; i++) {
-                    getPhone(i, phones + functions.pad(i, 4));
+                    current_phone_number = phones;
+                    getPhone(i, current_phone_number + functions.pad(i, 4));
                 }
             }
 
             function getPhone(index, phone_number, callback) {
+
                 var base_url = 'http://www.canada411.ca/res/';
-                request.get(base_url + phone_number, function (err, response, body) {
-                    if (!err && response.statusCode === 200) {
-                        var $ = cheerio.load(body);
-
-                        $('#contact').filter(function () {
-                            var data = $(this);
-
-                            var listing = new Directory({
-                                name: data.find('.c411ListedName').first().text(),
-                                phone: data.find('.c411Phone').first().text(),
-                                address: data.find('.c411Address').first().text().trim(),
-                                phone_raw: phone_number
-                            });
-
-                            listing.save(function (err, element) {
-                                if (err) {
-                                    return console.log(err);
-                                }
-                                console.log(element);
-                            });
-                        });
-                    } else {
-                        if (err) {
-                            return console.error(err);
-                        }
-                        console.log('code: ' + ((argv.area_code !== undefined) ? argv.area_code : argv.phone_range) + '; index: ' + index + ';No information found for phone number:', phone_number);
-                    }
-                });
+                request.get(base_url + phone_number, sendRequest);
 
                 if (callback !== undefined) {
                     callback();
+                }
+            }
+
+            function sendRequest(err, response, body) {
+                if (!err && response.statusCode === 200) {
+                    var $ = cheerio.load(body);
+
+                    $('#contact').filter(function () {
+                        var data = $(this);
+
+                        var listing = new Directory({
+                            name: data.find('.c411ListedName').first().text(),
+                            phone: data.find('.c411Phone').first().text(),
+                            address: data.find('.c411Address').first().text().trim(),
+                            phone_raw: current_phone_number
+                        });
+
+                        listing.save(function (err, element) {
+                            if (err) {
+                                return console.log(err);
+                            }
+                            console.log(element);
+                        });
+                    });
+                } else {
+                    if (err) {
+                        return console.error(err);
+                    }
+                    console.log('code: ' + ((argv.area_code !== undefined) ? argv.area_code : argv.phone_range) + '; index: ' + index + ';No information found for phone number:', current_phone_number);
                 }
             }
         });
