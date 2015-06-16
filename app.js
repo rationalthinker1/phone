@@ -1,9 +1,11 @@
 #!/usr/bin/env node
-//node --max_executable_size=2048 --max_old_space_size=6144 app.js 905 0 93
-//node --max_executable_size=2048 --max_old_space_size=6144 app.js --area_code=905 --to=0 --from=5
-//node --max_executable_size=2048 --max_old_space_size=6144 app.js --phone_range=905785
+
+//node --max_executable_size=2048 --max_old_space_size=8192 app.js --area_code=905 --to=0 --from=5
+//node --max_executable_size=2048 --max_old_space_size=8192 app.js --phone_range=905785
 // mongoimport --db directory --collection directories --file phones.json
 // mongoexport --db directory --collection directories --out phones8.json
+// mongo directory ./numbers/export.js > count.txt
+// cat count.txt | sort -rg > ./numbers/count_sort.txt
 //
 // To add a new column:
 // db.directories.find({ phone: "(905) 785-0005"}).forEach(function(list) { db.directories.update({ phone: list.phone }, { $set: { phone_raw: list.phone.replace(/[^0-9]/g, '') } }); });
