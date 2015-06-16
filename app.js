@@ -1,12 +1,15 @@
 #!/usr/bin/env node
-//node --max_executable_size=2048 --max_old_space_size=6144 app.js 905 0 93
-//node --max_executable_size=2048 --max_old_space_size=6144 app.js --area_code=905 --to=0 --from=5
-//node --max_executable_size=2048 --max_old_space_size=6144 app.js --phone_range=905785
+
+//nohup node --max_executable_size=2048 --max_old_space_size=8192 app.js --area_code=905 --to=0 --from=5 &
+//nohup node --max_executable_size=2048 --max_old_space_size=8192 app.js --phone_range=905785 &
 // mongoimport --db directory --collection directories --file phones.json
 // mongoexport --db directory --collection directories --out phones8.json
+// mongo directory ./numbers/export.js > count.txt
+// cat count.txt | sort -rg > ./numbers/count_sort.txt
 //
 // To add a new column:
 // db.directories.find({ phone: "(905) 785-0005"}).forEach(function(list) { db.directories.update({ phone: list.phone }, { $set: { phone_raw: list.phone.replace(/[^0-9]/g, '') } }); });
+// db.directories.find( { address: /^22 Northwood Dr.*/ })
 
 /* Global Requirements */
 var cheerio  = require('cheerio');
@@ -14,6 +17,7 @@ var request  = require('request');
 var async    = require('async');
 var argv     = require('minimist')(process.argv.slice(2));
 var cluster  = require('cluster');
+var sleep    = require('sleep');
 var mongoose = require('mongoose').connect('mongodb://127.0.0.1:27017/directory');
 var db       = mongoose.connection;
 
@@ -35,8 +39,6 @@ if (cluster.isMaster) {
         worker.send({'id': i});
     }
 
-    /* TODO: Master should be working too. */
-
     cluster.on('exit', function (worker, code, signal) {
         console.log('worker ' + worker.process.pid + ' died');
     });
@@ -54,7 +56,8 @@ if (cluster.isMaster) {
                 'Worker: ', msg.id, "\n",
                 'Start: ', start, "\n",
                 'End: ', end, "\n",
-                'Rate: ', rate, "\n"
+                'Rate: ', rate, "\n",
+                'numCPUs: ', numCPUs, "\n"
             );
 
             if (argv.to !== undefined && argv.from !== undefined) {
