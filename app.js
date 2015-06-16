@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 //node --max_executable_size=2048 --max_old_space_size=6144 app.js 905 0 93
+//node --max_executable_size=2048 --max_old_space_size=6144 app.js --area_code=905 --to=0 --from=5
+//node --max_executable_size=2048 --max_old_space_size=6144 app.js --phone_range=905785
 // mongoimport --db directory --collection directories --file phones.json
 // mongoexport --db directory --collection directories --out phones8.json
 //
@@ -10,6 +12,7 @@
 var cheerio  = require('cheerio');
 var request  = require('request');
 var async    = require('async');
+var argv     = require('minimist')(process.argv.slice(2));
 var cluster  = require('cluster');
 var mongoose = require('mongoose').connect('mongodb://127.0.0.1:27017/directory');
 var db       = mongoose.connection;
@@ -17,9 +20,10 @@ var db       = mongoose.connection;
 /* Local Requirements */
 var Directory = require('./models/directory');
 var functions = require('./functions');
-var phones    = require('./numbers/' + process.argv[2]);
+var phones    = (argv.area_code !== undefined) ? require('./numbers/' + argv.area_code) : argv.phone_range;
 var numCPUs   = require('os').cpus().length;
 
+/* How many checks will be do? 10^4 */
 var permutation = 10000;
 
 if (cluster.isMaster) {
@@ -53,10 +57,15 @@ if (cluster.isMaster) {
                 'Rate: ', rate, "\n"
             );
 
-            /* TODO: Add package minimalist to do individual spectrum of numbers, e.g. 905785.... */
-            for (var j = process.argv[3]; j < process.argv[4]; j++) {
+            if (argv.to !== undefined && argv.from !== undefined) {
+                for (var j = argv.to; j < argv.from; j++) {
+                    for (var i = start; i < end; i++) {
+                        getPhone(j, phones[j] + functions.pad(i, 4));
+                    }
+                }
+            } else {
                 for (var i = start; i < end; i++) {
-                    getPhone(j, phones[j] + functions.pad(i, 4));
+                    getPhone(i, phones + functions.pad(i, 4));
                 }
             }
 
@@ -87,7 +96,7 @@ if (cluster.isMaster) {
                         if (err) {
                             return console.error(err);
                         }
-                        console.log('code: ' + process.argv[2] + '; index: ' + index + ';No information found for phone number:', phone_number);
+                        console.log('code: ' + ((argv.area_code !== undefined) ? argv.area_code : argv.phone_range) + '; index: ' + index + ';No information found for phone number:', phone_number);
                     }
                 });
 
