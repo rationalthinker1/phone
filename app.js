@@ -110,43 +110,6 @@ if (cluster.isMaster) {
                     callback();
                 }
             }
-
-            function getAddress(index, phone_number, callback) {
-                var base_url = 'http://www.canada411.ca/res/';
-                request.get(base_url + phone_number, function (err, response, body) {
-
-                    if (!err && response.statusCode === 200) {
-                        var $ = cheerio.load(body);
-
-                        $('#contact').filter(function () {
-                            var data = $(this);
-
-                            Directory.findOne({phone_raw:  new RegExp('^'+phone_number+'$', "i") }, function (err, listing) {
-                                if (err) {
-                                    return console.log(err);
-                                }
-
-                                var map = {
-                                    phone_raw: phone_number,
-                                    locality: data.find('.locality').first().text().trim(),
-                                    region: data.find('.region').first().text().trim(),
-                                    postal_code: data.find('.postal-code').first().text().trim()
-                                };
-                                console.log(map);
-
-                                listing.locality    = map.locality;
-                                listing.region      = map.region;
-                                listing.postal_code = map.postal_code;
-                                listing.save();
-                            });
-                        });
-                    } else {
-                        if (err) {
-                            return console.error(err);
-                        }
-                    }
-                });
-            }
         });
     });
 }
