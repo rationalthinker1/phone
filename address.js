@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+//db.directories.find( { locality: { $exists: true } }).count()
+//db.directories.find( { phone_raw: 9058408431 })
+//db.directories.find( { phone: /^\(613\) 332-3293/ })
+
 var cheerio  = require('cheerio');
 var request  = require('request');
 var Q        = require('q');
@@ -14,7 +18,7 @@ var Directory = require('./models/directory');
 var functions = require('./functions');
 var numCPUs   = require('os').cpus().length;
 
-var limit = argv.limit || 1000;
+var limit = argv.limit || 100000;
 var skip  = argv.skip;
 
 if (cluster.isMaster) {
@@ -35,8 +39,8 @@ if (cluster.isMaster) {
         db.on('error', console.error);
         db.once('open', function () {
 
-            var rate  = parseInt(limit / numCPUs);
-            var start = rate * msg.id;
+            var rate  = Math.ceil(limit / numCPUs);
+            var start = skip + (rate * msg.id);
             var end   = start + rate;
 
             console.log(
@@ -49,10 +53,11 @@ if (cluster.isMaster) {
 
             var q = Directory.find({}).exists('locality', false).skip(start).limit(end);
             q.exec(function (err, records) {
-                var i = start;
-                records.forEach(function (element, index, array) {
-                    getAddress(i, element.phone_raw, function () {
-                        i++;
+                records.forEach(function (record, index, array) {
+                    getAddress(record.phone_raw).then(function (address) {
+                        record.update(address).exec();
+                        record.visits.$inc();
+                        record.save();
                     });
                 });
             });
@@ -60,36 +65,7 @@ if (cluster.isMaster) {
     });
 }
 
-
-function getAddress(index, phone_raw, callback) {
-    Directory.findOne({phone_raw: new RegExp('^' + phone_raw + '$')}, function (err, listing) {
-        if ((listing != undefined) && (listing.locality == undefined)) {
-            getRequest(index, phone_raw).then(function (map) {
-                console.log(map);
-                listing.update({
-                    locality:    map.locality,
-                    region:      map.region,
-                    postal_code: map.postal_code
-                }).exec();
-                listing.visits.$inc();
-                listing.save();
-            });
-        } else {
-            if (listing == undefined) {
-                console.log('listing is undefined', listing);
-            } else {
-                console.log('Locality already set', listing.locality);
-            }
-        }
-    });
-
-    if (callback !== undefined) {
-        callback();
-    }
-}
-
-
-function getRequest(index, phone_number) {
+function getAddress(phone_number) {
     var deferred = Q.defer();
     var base_url = 'http://www.canada411.ca/res/';
     request.get(base_url + phone_number, function (err, response, body) {
@@ -100,14 +76,13 @@ function getRequest(index, phone_number) {
             $('#contact').filter(function () {
                 var data = $(this);
 
-                var map = {
-                    index:       index,
-                    phone_raw:   phone_number,
+                var address = {
                     locality:    data.find('.locality').first().text().trim(),
                     region:      data.find('.region').first().text().trim(),
                     postal_code: data.find('.postal-code').first().text().trim()
                 };
-                deferred.resolve(map);
+                console.log(phone_number, address);
+                deferred.resolve(address);
             });
         } else {
             if (err) {
@@ -117,5 +92,4 @@ function getRequest(index, phone_number) {
 
     });
     return deferred.promise;
-
 }
