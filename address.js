@@ -61,10 +61,10 @@ if (cluster.isMaster) {
 }
 
 
-function getAddress(index, phone_number, callback) {
-    Directory.findOne({phone_raw: new RegExp('^' + phone_number + '$')}, function (err, listing) {
-        if (listing.locality == undefined || listing.locality == null) {
-            getRequest(index, phone_number).then(function (map) {
+function getAddress(index, phone_raw, callback) {
+    Directory.findOne({phone_raw: new RegExp('^' + phone_raw + '$')}, function (err, listing) {
+        if ((listing != undefined) && (listing.locality == undefined)) {
+            getRequest(index, phone_raw).then(function (map) {
                 console.log(map);
                 listing.update({
                     locality:    map.locality,
@@ -75,7 +75,11 @@ function getAddress(index, phone_number, callback) {
                 listing.save();
             });
         } else {
-            console.log('Locality already set', listing.locality);
+            if (listing == undefined) {
+                console.log('listing is undefined', listing);
+            } else {
+                console.log('Locality already set', listing.locality);
+            }
         }
     });
 
