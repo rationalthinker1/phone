@@ -12,19 +12,10 @@ var db       = mongoose.connection;
 
 var Directory = require('./models/directory');
 var functions = require('./functions');
+var numCPUs   = require('os').cpus().length;
 
-var limit = argv.limit || 1000 ;
-var skip = argv.skip;
-
-var q = Directory.find({}).limit(limit).skip(skip);
-q.exec(function (err, records) {
-    var i = skip;
-    records.forEach(function(element, index, array) {
-        getAddress(i, element.phone_raw, function() {
-            i++;
-        });
-    });
-});
+var limit = argv.limit || 1000;
+var skip  = argv.skip;
 
 if (cluster.isMaster) {
     /* Forking to creating workers */
@@ -56,61 +47,71 @@ if (cluster.isMaster) {
                 'numCPUs: ', numCPUs, "\n"
             );
 
-            if (argv.to !== undefined && argv.from !== undefined) {
-                for (var j = argv.to; j < argv.from; j++) {
-                    for (var i = start; i < end; i++) {
-                        getAddress(j, phones[j] + functions.pad(i, 4));
-                    }
-                }
-            } else {
-                for (var i = start; i < end; i++) {
-                    getPhone(i, phones + functions.pad(i, 4));
-                }
-            }
+            var q = Directory.find({}).exists('locality', false).skip(start).limit(end);
+            q.exec(function (err, records) {
+                var i = start;
+                records.forEach(function (element, index, array) {
+                    getAddress(i, element.phone_raw, function () {
+                        i++;
+                    });
+                });
+            });
         });
     });
 }
 
 
 function getAddress(index, phone_number, callback) {
-    Directory.findOne({phone_raw:  new RegExp('^'+phone_number+'$', "i") }, function (err, listing) {
-        if(listing.locality == undefined || listing.locality == null) {
-            var base_url = 'http://www.canada411.ca/res/';
-            request.get(base_url + phone_number, function (err, response, body) {
-
-                if (!err && response.statusCode === 200) {
-                    var $ = cheerio.load(body);
-
-                    $('#contact').filter(function () {
-                        var data = $(this);
-
-                        var map = {
-                            index: index,
-                            phone_raw: phone_number,
-                            locality: data.find('.locality').first().text().trim(),
-                            region: data.find('.region').first().text().trim(),
-                            postal_code: data.find('.postal-code').first().text().trim()
-                        };
-                        console.log(map);
-
-                        listing.locality    = map.locality;
-                        listing.region      = map.region;
-                        listing.postal_code = map.postal_code;
-                        listing.save();
-                    });
-                } else {
-                    if (err) {
-                        return console.error(err);
-                    }
-                }
+    Directory.findOne({phone_raw: new RegExp('^' + phone_number + '$')}, function (err, listing) {
+        if (listing.locality == undefined || listing.locality == null) {
+            getRequest(index, phone_number).then(function (map) {
+                console.log(map);
+                listing.update({
+                    locality:    map.locality,
+                    region:      map.region,
+                    postal_code: map.postal_code
+                }).exec();
+                listing.visits.$inc();
+                listing.save();
             });
         } else {
-            console.log('Locality already set');
+            console.log('Locality already set', listing.locality);
         }
     });
-
 
     if (callback !== undefined) {
         callback();
     }
+}
+
+
+function getRequest(index, phone_number) {
+    var deferred = Q.defer();
+    var base_url = 'http://www.canada411.ca/res/';
+    request.get(base_url + phone_number, function (err, response, body) {
+
+        if (!err && response.statusCode === 200) {
+            var $ = cheerio.load(body);
+
+            $('#contact').filter(function () {
+                var data = $(this);
+
+                var map = {
+                    index:       index,
+                    phone_raw:   phone_number,
+                    locality:    data.find('.locality').first().text().trim(),
+                    region:      data.find('.region').first().text().trim(),
+                    postal_code: data.find('.postal-code').first().text().trim()
+                };
+                deferred.resolve(map);
+            });
+        } else {
+            if (err) {
+                deferred.reject(err);
+            }
+        }
+
+    });
+    return deferred.promise;
+
 }

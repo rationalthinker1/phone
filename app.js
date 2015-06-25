@@ -74,7 +74,7 @@ if (cluster.isMaster) {
 
             function getPhone(index, phone_number, callback) {
                 var base_url = 'http://www.canada411.ca/res/';
-                request.get(base_url + phone_number + '&where=Canada', function (err, response, body) {
+                request.get(base_url + phone_number, function (err, response, body) {
                     if (!err && response.statusCode === 200) {
                         var $ = cheerio.load(body);
 
