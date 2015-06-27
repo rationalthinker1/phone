@@ -16,7 +16,6 @@ var cheerio  = require('cheerio');
 var request  = require('request');
 var async    = require('async');
 var Q        = require('q');
-var _        = require('underscore');
 var argv     = require('minimist')(process.argv.slice(2));
 var cluster  = require('cluster');
 var sleep    = require('sleep');
@@ -65,12 +64,12 @@ if (cluster.isMaster) {
             if (argv.to !== undefined && argv.from !== undefined) {
                 for (var j = argv.to; j < argv.from; j++) {
                     for (var i = start; i < end; i++) {
-                        Directory.getInformation(j, phones[j] + functions.pad(i, 4));
+                        Directory.getData(j, phones[j] + functions.pad(i, 4)).then(Directory.saveDirectory(data));
                     }
                 }
             } else {
                 for (var k = start; k < end; k++) {
-                    Directory.getInformation(k, phones + functions.pad(k, 4));
+                    Directory.getData(k, phones + functions.pad(k, 4)).then(Directory.saveDirectory(data));
                 }
             }
         });

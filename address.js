@@ -4,14 +4,9 @@
 //db.directories.find( { phone_raw: 9058408431 })
 //db.directories.find( { phone: /^\(613\) 332-3293/ })
 
-var cheerio  = require('cheerio');
-var request  = require('request');
-var Q        = require('q');
 var _        = require('underscore');
-var async    = require('async');
 var argv     = require('minimist')(process.argv.slice(2));
 var cluster  = require('cluster');
-var sleep    = require('sleep');
 var mongoose = require('mongoose').connect('mongodb://127.0.0.1:27017/directory');
 var db       = mongoose.connection;
 
@@ -55,10 +50,8 @@ if (cluster.isMaster) {
             var q = Directory.find({}).exists('locality', false).skip(start).limit(end);
             q.exec(function (err, records) {
                 records.forEach(function (record, index, array) {
-                    Directory.getAddress(record.phone_raw).then(function (address) {
-                        record.locality    = address.locality;
-                        record.region      = address.region;
-                        record.postal_code = address.postal_code;
+                    Directory.getAddress(record.phone_raw).then(function (data) {
+                        var record =  _.extend(record, data);
                         record.save(function (err, element) {
                             if (err) {
                                 return console.error(err);
