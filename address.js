@@ -7,6 +7,7 @@
 var cheerio  = require('cheerio');
 var request  = require('request');
 var Q        = require('q');
+var _        = require('underscore');
 var async    = require('async');
 var argv     = require('minimist')(process.argv.slice(2));
 var cluster  = require('cluster');
@@ -19,7 +20,7 @@ var functions = require('./functions');
 var numCPUs   = require('os').cpus().length;
 
 var limit = argv.limit || 100000;
-var skip  = argv.skip;
+var skip  = argv.skip || 0;
 
 if (cluster.isMaster) {
     /* Forking to creating workers */
@@ -54,42 +55,19 @@ if (cluster.isMaster) {
             var q = Directory.find({}).exists('locality', false).skip(start).limit(end);
             q.exec(function (err, records) {
                 records.forEach(function (record, index, array) {
-                    getAddress(record.phone_raw).then(function (address) {
-                        record.update(address).exec();
-                        record.visits.$inc();
-                        record.save();
+                    Directory.getAddress(record.phone_raw).then(function (address) {
+                        record.locality    = address.locality;
+                        record.region      = address.region;
+                        record.postal_code = address.postal_code;
+                        record.save(function (err, element) {
+                            if (err) {
+                                return console.error(err);
+                            }
+                            console.log(element);
+                        });
                     });
                 });
             });
         });
     });
-}
-
-function getAddress(phone_number) {
-    var deferred = Q.defer();
-    var base_url = 'http://www.canada411.ca/res/';
-    request.get(base_url + phone_number, function (err, response, body) {
-
-        if (!err && response.statusCode === 200) {
-            var $ = cheerio.load(body);
-
-            $('#contact').filter(function () {
-                var data = $(this);
-
-                var address = {
-                    locality:    data.find('.locality').first().text().trim(),
-                    region:      data.find('.region').first().text().trim(),
-                    postal_code: data.find('.postal-code').first().text().trim()
-                };
-                console.log(phone_number, address);
-                deferred.resolve(address);
-            });
-        } else {
-            if (err) {
-                deferred.reject(err);
-            }
-        }
-
-    });
-    return deferred.promise;
 }

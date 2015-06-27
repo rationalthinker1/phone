@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-// nohup node --max_executable_size=2048 --max_old_space_size=8192 app.js --area_code=905 --to=0 --from=5 &
-// nohup node --max_executable_size=2048 --max_old_space_size=8192 app.js --phone_range=905785 &
+//nohup node --max_executable_size=2048 --max_old_space_size=8192 app.js --area_code=905 --to=0 --from=5 &
+//nohup node --max_executable_size=2048 --max_old_space_size=8192 app.js --phone_range=905785 &
 // mongoimport --db directory --collection directories --file phones.json
 // mongoexport --db directory --collection directories --out phones8.json
 // mongo directory ./numbers/export.js > count.txt
@@ -15,6 +15,8 @@
 var cheerio  = require('cheerio');
 var request  = require('request');
 var async    = require('async');
+var Q        = require('q');
+var _        = require('underscore');
 var argv     = require('minimist')(process.argv.slice(2));
 var cluster  = require('cluster');
 var sleep    = require('sleep');
@@ -63,51 +65,12 @@ if (cluster.isMaster) {
             if (argv.to !== undefined && argv.from !== undefined) {
                 for (var j = argv.to; j < argv.from; j++) {
                     for (var i = start; i < end; i++) {
-                        getPhone(j, phones[j] + functions.pad(i, 4));
+                        Directory.getInformation(j, phones[j] + functions.pad(i, 4));
                     }
                 }
             } else {
-                for (var i = start; i < end; i++) {
-                    getPhone(i, phones + functions.pad(i, 4));
-                }
-            }
-
-            function getPhone(index, phone_number, callback) {
-                var base_url = 'http://www.canada411.ca/res/';
-                request.get(base_url + phone_number, function (err, response, body) {
-                    if (!err && response.statusCode === 200) {
-                        var $ = cheerio.load(body);
-
-                        $('#contact').filter(function () {
-                            var data = $(this);
-
-                            var listing = new Directory({
-                                name:        data.find('.c411ListedName').first().text(),
-                                phone:       data.find('.c411Phone').first().text(),
-                                address:     data.find('.c411Address').first().text().trim(),
-                                locality:    data.find('.locality').first().text().trim(),
-                                region:      data.find('.region').first().text().trim(),
-                                postal_code: data.find('.postal-code').first().text().trim(),
-                                phone_raw:   phone_number
-                            });
-
-                            listing.save(function (err, element) {
-                                if (err) {
-                                    return console.log(err);
-                                }
-                                console.log(element);
-                            });
-                        });
-                    } else {
-                        if (err) {
-                            return console.error(err);
-                        }
-                        console.log('code: ' + ((argv.area_code !== undefined) ? argv.area_code : argv.phone_range) + '; index: ' + index + ';No information found for phone number:', phone_number);
-                    }
-                });
-
-                if (callback !== undefined) {
-                    callback();
+                for (var k = start; k < end; k++) {
+                    Directory.getInformation(k, phones + functions.pad(k, 4));
                 }
             }
         });
