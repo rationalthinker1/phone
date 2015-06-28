@@ -10,7 +10,8 @@ var directorySchema = new mongoose.Schema({
     phone_raw: {type: String, unique: true, required: true, dropDups: true},
     locality: {type: String},
     region: {type: String},
-    postal_code: {type: String}
+    postal_code: {type: String},
+    house_type: {type: String}
 });
 
 directorySchema.statics.getData = function getAddress(phone_number) {
