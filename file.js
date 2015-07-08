@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Trim address
-//db.directories.find({},{ address: 1 }).forEach(function(doc) {
+//db.directories.find({},{ _id: 1, address: 1 }).forEach(function(doc) {
 //    doc.address = doc.address.trim();
 //    db.directories.update(
 //        { "_id": doc._id },
@@ -62,6 +62,6 @@ db.once('open', function () {
             });
         })
         .on('end', function () {
-            console.log("done");
+            console.log('done');
         });
 });

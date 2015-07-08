@@ -50,14 +50,8 @@ if (cluster.isMaster) {
             var q = Directory.find({}).exists('locality', false).skip(start).limit(end);
             q.exec(function (err, records) {
                 records.forEach(function (record, index, array) {
-                    Directory.getAddress(record.phone_raw).then(function (data) {
-                        var record =  _.extend(record, data);
-                        record.save(function (err, element) {
-                            if (err) {
-                                return console.error(err);
-                            }
-                            console.log(element);
-                        });
+                    Directory.getData(record.phone_raw).then(function (listing) {
+                        record.update(listing);
                     });
                 });
             });
