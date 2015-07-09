@@ -8,7 +8,13 @@ var db       = mongoose.connection;
 
 var Directory = require('./models/directory');
 var functions = require('./functions');
-var stream    = fs.createReadStream('DNC/226_raw.txt').pipe(split());
+
+if(!argv.area_code) {
+    console.log('Need area code');
+    process.exit(5);
+}
+
+var stream    = fs.createReadStream('DNC/' + argv.area_code + '_raw.txt').pipe(split());
 
 //fs.readFile('DNC/226_raw.txt', function read(err, data) {
 //
@@ -20,13 +26,31 @@ var stream    = fs.createReadStream('DNC/226_raw.txt').pipe(split());
 //    });
 //});
 
+//var phone_raw = 9057850474;
+//Directory.findOne({ phone_raw: phone_raw }, function (err, doc) {
+//    if(err) {
+//        console.error(err);
+//    }
+//
+//    if(doc != null) {
+//        console.log('Doc:', doc, '; Phone:', phone_raw);
+//    }
+//});
+
 stream.on('data', function(chunk) {
     var phone_raw = chunk.toString().trim();
-    Directory.findOne({ phone_raw: phone_raw }, function (err, doc) {
+    Directory.findOne(({ phone_raw: phone_raw }), function (err, doc) {
         if(err) {
             console.error(err);
         }
 
-        console.log(doc);
+        if(doc) {
+            console.log('Doc:', doc, '; Phone:', phone_raw, typeof phone_raw);
+        }
     });
+});
+
+stream.on('end', function() {
+    console.log('there is no more data.');
+    process.exit(1);
 });

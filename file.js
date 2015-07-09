@@ -9,6 +9,20 @@
 //    );
 //});
 // db.directories.update({}, { $set: { house_type: ''} }, false, true);
+
+/*
+var pipeline = [
+ { $group: { _id: { address: "$address" }, total: { $sum: 1 } } },
+ { $match: { total: { $gt: 50, $lt: 300 } } },
+ { $sort: { total: -1 } }
+ ];
+ var options = { allowDiskUse: true };
+ db.directories.aggregate(pipeline, options).forEach(function (doc){
+ var query = {"address": doc._id};
+ db.directories.remove(query);
+ });
+*/
+
 /*
  * "BENJAMIN","LAU","23 BAYFIELD DR","RICHMOND HILL","ON","L4S2M5","9052370063","90729","40","M","Owner","English","Upscale","University/College","Mixed","<15","Large","After 1996","Mixed House Types"
  "J","HERRING","77722A LONDON RD RR 5","CLINTON","ON","N0M1L0","5194829514","55758","47","U","Owner","English","Middle","High School/Trade","Blue-Collar","<20","Large","Before 1946 & A","Single Detached Houses"
