@@ -64,14 +64,14 @@ if (cluster.isMaster) {
             if (argv.to !== undefined && argv.from !== undefined) {
                 for (var j = argv.to; j < argv.from; j++) {
                     for (var i = start; i < end; i++) {
-                        Directory.getData(phones[j] + functions.pad(i, 4)).then(function(listing) {
+                        Directory.getData(phones[j] + functions.pad(i, 4)).then(function (listing) {
                             Directory.saveDirectory(listing);
                         });
                     }
                 }
             } else {
                 for (var k = start; k < end; k++) {
-                    Directory.getData(phones + functions.pad(k, 4)).then(function(listing) {
+                    Directory.getData(phones + functions.pad(k, 4)).then(function (listing) {
                         Directory.saveDirectory(listing);
                     });
                 }

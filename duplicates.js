@@ -2,18 +2,18 @@
 
 // Trim address
 /*
-db.directories.find({},{ _id: 1, address: 1 }).forEach(function(doc) {
-    doc.address = doc.address.trim();
-    db.directories.update(
-        { "_id": doc._id },
-        { "$set": { address: doc.address } }
-    );
-});
-*/
+ db.directories.find({},{ _id: 1, address: 1 }).forEach(function(doc) {
+ doc.address = doc.address.trim();
+ db.directories.update(
+ { "_id": doc._id },
+ { "$set": { address: doc.address } }
+ );
+ });
+ */
 // db.directories.update({}, { $set: { house_type: ''} }, false, true);
 
 /*
-var pipeline = [
+ var pipeline = [
  { $group: { _id: { address: "$address" }, total: { $sum: 1 } } },
  { $match: { total: { $gt: 50, $lt: 300 } } },
  { $sort: { total: -1 } }
@@ -23,7 +23,7 @@ var pipeline = [
  var query = {"address": doc._id};
  db.directories.remove(query);
  });
-*/
+ */
 
 /*
  * "BENJAMIN","LAU","23 BAYFIELD DR","RICHMOND HILL","ON","L4S2M5","9052370063","90729","40","M","Owner","English","Upscale","University/College","Mixed","<15","Large","After 1996","Mixed House Types"
@@ -57,14 +57,14 @@ var stream    = fs.createReadStream('main.csv');
 db.on('error', console.error);
 db.once('open', function () {
     var pipeline = [
-        { $group: { _id: { address: "$address" }, total: { $sum: 1 } } },
-        { $match: { total: { $gt: 50, $lt: 300 } } }
+        {$group: {_id: {address: "$address"}, total: {$sum: 1}}},
+        {$match: {total: {$gt: 50, $lt: 300}}}
     ];
-    var options = { allowDiskUse: true };
+    var options  = {allowDiskUse: true};
 
     var q = Directory.aggregate(pipeline, options);
     q.exec(function (err, doc) {
-        var query = {address : doc._id};
+        var query = {address: doc._id};
         db.directories.remove(query);
     });
 });
