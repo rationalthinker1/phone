@@ -17,10 +17,6 @@ var Directory = require('./models/directory');
 var functions = require('./functions');
 var stream    = fs.createReadStream('DNC/' + argv.area_code + '.csv').pipe(split());
 
-stream.on('readable', function () {
-    console.log('Start.');
-});
-
 stream.on('data', function (chunk) {
     var phone_raw = chunk.toString().replace(',', '').trim();
     Directory.findOneAndRemove(({phone_raw: phone_raw}), function (err, removed) {
