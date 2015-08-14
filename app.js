@@ -4,7 +4,7 @@
 //nohup node --max_executable_size=2048 --max_old_space_size=8192 app.js --phone_range=905785 &
 // mongoimport --db directory --collection directories --file phones.json
 // mongoexport --db directory --collection directories --out phones8.json
-// mongoexport --db directory --collection directories --type=csv --limit=2000 --query "{ locality: 'Mississauga' }" --out text2.csv --fields name,address,locality,region,postal_code,phone_raw
+// mongoexport --db directory --collection directories --type=csv --limit=5000 --query "{ locality: 'Barrie' }" --out 5kBarrie.csv --fields name,address,locality,region,postal_code,phone_raw
 // mongo directory ./numbers/export.js > count.txt
 // cat count.txt | sort -rg > ./numbers/count_sort.txt
 //

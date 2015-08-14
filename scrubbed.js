@@ -3,7 +3,6 @@
 var fs       = require('fs');
 var argv     = require('minimist')(process.argv.slice(2));
 var split    = require('split');
-var async    = require('async');
 var mongoose = require('mongoose').connect('mongodb://127.0.0.1:27017/directory');
 var db       = mongoose.connection;
 
