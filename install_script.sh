@@ -1,9 +1,14 @@
+# update ubuntu
+apt-get update
+apt-get dist-upgrade
+
 # update Nodejs
 npm cache clean -f
 npm install -g n
 n stable
 
 # install applications
+apt-get install -y npm
 apt-get install -y p7zip-full
 apt-get install -y unzip
 apt-get install -y htop
