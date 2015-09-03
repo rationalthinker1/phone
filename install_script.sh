@@ -1,6 +1,11 @@
 # update ubuntu
+<<<<<<< HEAD
 apt-get update -y
 apt-get dist-upgrade -y
+=======
+apt-get update
+apt-get dist-upgrade
+>>>>>>> b9e912f5fdc074c5f97b056b38d783505b492412
 
 # update Nodejs
 npm cache clean -f
